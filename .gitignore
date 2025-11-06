@@ -14,3 +14,4 @@ backend/dist/
 # OS/System files
 .DS_Store
 Thumbs.db
+.env
