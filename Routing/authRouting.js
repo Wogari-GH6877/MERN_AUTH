@@ -8,7 +8,7 @@ authRouting.post("/register",SignUp);
 authRouting.post("/login",Login);
 authRouting.post("/logout",LogOut);
 authRouting.post("/send-verify-otp",authMiddleWare,sendVerifyOtp);
-authRouting.post("/verify-email",authMiddleWare,VerifyEmail);
+authRouting.post("/verify-account",authMiddleWare,VerifyEmail);
 authRouting.get("/is-auth",authMiddleWare,isAuthenticated);
 authRouting.post("/send-reset-otp",sendResetOtp);
 authRouting.post("/reset-password",resetPassword);

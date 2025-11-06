@@ -8,7 +8,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 
-const allowedorigins=["http://localhost:5174"]
+const allowedorigins=["http://localhost:5174","http://localhost:5173"]
 
 
 const app=express();

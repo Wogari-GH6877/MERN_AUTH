@@ -3,7 +3,7 @@ import UserModel from "../Models/UserModel.js";
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken";
 import Transporter from "../Config/Nodemailer.js";
-
+import { EMAIL_VERIFY_TEMPLATE,PASSWORD_RESET_TEMPLATE } from "../Config/emailTemplate.js";
 
 
 export const SignUp=async(req,res)=>{
@@ -71,6 +71,15 @@ export const Login=async(req,res)=>{
         if(!isMatch){
           return  res.status(401).json({success:false,message:"PassWord is Wrong"});
         }
+        const token=jwt.sign({_id:isUserExist._id},process.env.JWT_KEY,{expiresIn:"7d"});
+        
+        // cookies
+        res.cookie("token",token,{
+            httpOnly:true,
+            secure:false,
+            sameSite:"strict",
+            maxAge:7*24*60*60*1000
+        });
 
         res.status(200).json({success:true,message:"Logged in Successfully"});
 
@@ -116,7 +125,8 @@ export const sendVerifyOtp=async(req,res)=>{
             from:process.env.EMAIL_SENDER,
             to:isUserExist.email,
             subject:"YOUR VERIFY OTP",
-            text:`Your OTP is ${Otp},Verify Your Account Using OTP`}
+            // text:`Your OTP is ${Otp},Verify Your Account Using OTP`}
+            html:EMAIL_VERIFY_TEMPLATE.replace("{{otp}}",Otp).replace("{{email}}",isUserExist.email)}
 
         await Transporter.sendMail(mailOption);
 
@@ -147,7 +157,7 @@ export const VerifyEmail=async(req,res)=>{
            return res.json({success:false,message:"Invalid OTP"});
         }
 
-        if(user.resetOtpEpireAt< Date.now()){
+        if(user.verifyOtpEpireAt< Date.now()){
            return res.json({success:false,message:"OTP is Expired"})
 
         }
@@ -198,8 +208,9 @@ export const sendResetOtp= async(req,res)=>{
             from:process.env.EMAIL_SENDER,
             to:user.email,
             subject:"YOUR PASSWORD RESET OTP",
-            text:`Your Password RESET-OTP is ${Otp},Reset  Your Password Account Using OTP`}
-
+            // text:`Your Password RESET-OTP is ${Otp},Reset  Your Password Account Using OTP`}
+            html:PASSWORD_RESET_TEMPLATE.replace("{{otp}}",Otp).replace("{{email}}",user.email)
+        }
         await Transporter.sendMail(mailOption);
 
         res.json({success:true,message:"Password reset-Otp is Sent"});
