@@ -19,7 +19,7 @@ try {
 
     
 } catch (error) {
-    res.json({success:true,message:error.message});
+        res.status(500).json({success:false,message:error.message});
 }
 }
 

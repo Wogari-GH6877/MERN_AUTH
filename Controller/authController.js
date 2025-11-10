@@ -23,14 +23,14 @@ try {
         const hashPassword=await bcrypt.hash(password,10);
 
         const new_user=await UserModel.create({name,email,password:hashPassword});
-        new_user.save();
+        await new_user.save();
 
         const token=jwt.sign({_id:new_user._id},process.env.JWT_KEY,{expiresIn:"7d"});
         
         // cookies
         res.cookie("token",token,{
             httpOnly:true,
-            secure:false,
+            secure:process.env.NODE_ENV==="production",
             sameSite:"strict",
             maxAge:7*24*60*60*1000
         });
@@ -48,7 +48,7 @@ try {
 
         res.status(200).json({success:true,message:"User is created",token});
 } catch (error) {
-    res.json({success:false,message:error.message});
+    res.status(500).json({success:false,message:error.message});
 }
 }
 
@@ -76,7 +76,7 @@ export const Login=async(req,res)=>{
         // cookies
         res.cookie("token",token,{
             httpOnly:true,
-            secure:false,
+            secure:process.env.NODE_ENV==="production",
             sameSite:"strict",
             maxAge:7*24*60*60*1000
         });
@@ -94,7 +94,7 @@ export const LogOut=async(req,res)=>{
 
         res.clearCookie("token",{
             httpOnly:true,
-            secure:false,
+            secure:process.env.NODE_ENV==="production",
             sameSite:"strict"
         })
         res.json({success:true,message:"You Logout Successfully"})
@@ -118,8 +118,8 @@ export const sendVerifyOtp=async(req,res)=>{
 
         const Otp=String(Math.floor(100000+Math.random()*900000));
         isUserExist.verifyOtp=Otp;
-        isUserExist.verifyOtpEpireAt=Date.now() + 24*60*60*1000;
-        isUserExist.save();
+        isUserExist.verifyOtpExpireAt=Date.now() + 24*60*60*1000;
+        await isUserExist.save();
 
         const mailOption={
             from:process.env.EMAIL_SENDER,
@@ -134,7 +134,7 @@ export const sendVerifyOtp=async(req,res)=>{
 
         
     } catch (error) {
-        res.json({success:false,message:error.message});
+        res.status(500).json({success:false,message:error.message});
     }
     
 }
@@ -157,21 +157,21 @@ export const VerifyEmail=async(req,res)=>{
            return res.json({success:false,message:"Invalid OTP"});
         }
 
-        if(user.verifyOtpEpireAt< Date.now()){
+        if(user.verifyOtpExpireAt< Date.now()){
            return res.json({success:false,message:"OTP is Expired"})
 
         }
 
         user.isAccountVerified=true;
         user.verifyOtp="";
-        user.verifyOtpEpireAt=0;
+        user.verifyOtpExpireAt=0;
 
         await user.save();
 
         res.json({success:true ,message:"User Successfully Verified"})
 
     } catch (error) {
-        res.json({success:false,message:error.message});
+        res.status(500).json({success:false,message:error.message});
     }
 
 }
@@ -182,7 +182,7 @@ export const isAuthenticated=async(req,res)=>{
     res.json({success:true,message:"User is Authenticated"});
     
  } catch (error) {
-    res.json({success:false,message:error.message})
+    res.status(500).json({success:false,message:error.message});
  }
 }
 
@@ -200,7 +200,7 @@ export const sendResetOtp= async(req,res)=>{
         }
         const Otp=String(Math.floor(Math.random()*900000 +100000));
         user.resetOtp=Otp;
-        user.resetOtpEpireAt=Date() + 7*20*60*60*1000;
+        user.resetOtpExpireAt=Date.now() + 15*60*1000;
 
         await user.save();
 
@@ -216,7 +216,7 @@ export const sendResetOtp= async(req,res)=>{
         res.json({success:true,message:"Password reset-Otp is Sent"});
 
     } catch (error) {
-        res.json({success:false,message:error.message})
+        res.status(500).json({success:false,message:error.message});
     }
 }
 
@@ -233,7 +233,7 @@ export const resetPassword= async(req,res)=>{
 
         }
          if (newPassword.length<8){
-            return res.status(401).json({success:false,message:"Password length must be more 8"});
+            return res.status(400).json({success:false,message:"Password length must be more 8"});
         }
         if(user.resetOtp==="" || user.resetOtp !==Otp){
             return res.json({success:false,message:"InValid OTP"});
@@ -249,13 +249,13 @@ export const resetPassword= async(req,res)=>{
         user.resetOtp="";
         user.resetOtpExpireAt=0;
 
-        user.save();
+        await user.save();
 
         return res.json({success:true,message:"Password has been reset successfully"});
 
 
 
     } catch (error) {
-        res.json({success:false,message:error.message});
+       res.status(500).json({success:false,message:error.message});
     }
 }

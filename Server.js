@@ -8,7 +8,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 
-const allowedorigins=["http://localhost:5174","http://localhost:5173"]
+const allowedorigins=[process.env.CLIENT_URL,process.env.CLIENT_URL_2]
 
 
 const app=express();
@@ -22,7 +22,7 @@ app.use(cors({origin:allowedorigins,credentials:true}))
 
 
 
-const Port=process.env.PORT || 4000;
+const Port=process.env.PORT ;
 
 app.get("/",(req,res)=>{
     res.send("Api is listneing");
