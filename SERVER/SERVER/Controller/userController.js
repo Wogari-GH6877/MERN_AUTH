@@ -10,16 +10,16 @@ try {
     const user =await UserModel.findById(user_id);
 
     if(!user){
-        return res.status(401).json({success:false,message:"User Does not Found on Database"});
+        return res.json({success:false,message:"User Does not Found on Database"});
     }
 
     res.json({success:true,
-        userData:{name:user.name,
-        isAccountVerified:user.isAccountVerified}});
+        user:{name:user.name,
+        isAuthenticated:user.isAuthenticated}});
 
     
 } catch (error) {
-        res.status(500).json({success:false,message:error.message});
+    res.json({success:true,message:error.message});
 }
 }
 
